@@ -7,7 +7,6 @@ using namespace std;
 const int MAXRESULTS   = 20;    // Max matches that can be found
 const int MAXDICTWORDS = 30000; // Max words that can be read in
 
-//create a recursive helper function to check that dict is not greater than maxdictwords
 
 int addToDict(istream &dictFile, int maxDictWords, string *dict)
 {
@@ -33,6 +32,7 @@ int addToDict(istream &dictFile, int maxDictWords, string *dict)
     }
 }
 
+
 int lexiconBuilder(istream &dictfile, string* dict){
     
     int max = MAXDICTWORDS; // create a copy so we don't change a global const
@@ -41,8 +41,7 @@ int lexiconBuilder(istream &dictfile, string* dict){
 }
 
 
-
-//insertPerm();
+// declaring function prototypes
 void getPermutations(string prefix,string rest, const string *dict, int dictSize, string *results, int &count);
 bool Loop( string prefix, string rest, const string *dict, int dictSize, string *results, int &count,int i);
 int insertPerm(string prefix, const string *dict, int dictSize , string *results,  int &count );
@@ -50,11 +49,11 @@ bool isDuplicate(string prefix, string *results, int i, int count);
 
 int theJumbler(string word, const string *dict, int dictSize,
 string *results){
+    //base case when count is 0
     int count = 0;
     
-       
+       // call the function to get the permutations
         getPermutations(word.substr(0,0), word.substr(0), dict, dictSize, results, count);
-//    getPermutations("", word, dict, dictSize, results, count);
     
     
     return count;
@@ -67,9 +66,8 @@ bool Loop( string prefix, string rest, const string *dict, int dictSize, string 
         return true;
     }
     else{
-        //loop through the string excluding the current index
+        // loop through every letter of the word
         getPermutations( prefix + rest[i], rest.substr(0, i) + rest.substr(i+1),  dict, dictSize,results, count);
-       // increment the index
         Loop(prefix, rest, dict, dictSize, results, count, i+1);
     }
     return true;
@@ -77,11 +75,13 @@ bool Loop( string prefix, string rest, const string *dict, int dictSize, string 
 
 void getPermutations(string prefix,string rest, const string* dict, int dictSize, string* results, int &count){
     
-  
+  //  base case for the loop to check if we have reached the end of the string
     if(rest.size() <= 0){
-        if(count >0 && count>= MAXRESULTS){
+        // check if the number of results has reached the max
+        if( count>= MAXRESULTS){ 
             return;
         }
+        // check if the prefix is not a duplicate, then add it to the results
         if(!isDuplicate(prefix, results, 0, count)){
             count += insertPerm(prefix, dict, dictSize, results, count);
         }
@@ -95,12 +95,14 @@ void getPermutations(string prefix,string rest, const string* dict, int dictSize
     
 }
 
-int insertPerm(string prefix, const string* dict, int dictSize , string *results,  int &count ){
+int insertPerm(string prefix, const string* dict, int dictSize , string *results,  int &count ){ 
+    //base case to see if we've reached the end of the dictionary
     if(dictSize == 0){
         return 0;
     }
    
     else{
+        // check if the permutation is a word in the dictionary
         if(prefix == dict[0]){
             results[count] = prefix;
             return 1;
@@ -113,21 +115,26 @@ int insertPerm(string prefix, const string* dict, int dictSize , string *results
 }
 
 bool isDuplicate(string prefix, string *results, int i, int count){
+    // base case to check if we've reached the end of the results
     if(i >= count ){
         return false;
     }
+    // check if the permuation is in results
     if(results[i] == prefix){
         return true;
     }
     else{
+        //increment 
         return isDuplicate(prefix, results+1, i+1, count);
     }
 }
 void divulgeSolutions(const string* results, int size){
+    // base case to check if we've reached the end of the results
     if(size == 0){
         return;
     }
     else{
+        // print the results
         cout<< results[0]<< " "<< endl;
         divulgeSolutions(results+1, size-1);
     }
@@ -141,7 +148,7 @@ int main()
     ifstream dictfile;         // file containing the list of words
     int nwords;                // number of words read from dictionary
     string word;
-    dictfile.open("words.txt");
+    dictfile.open("/Users/shanietalor/Desktop/CS 32/Project3/words.txt");
     if (!dictfile) {
         cout << "File not found!" << endl;
         return (1);
