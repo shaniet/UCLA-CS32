@@ -4,64 +4,72 @@
 #include "GraphObject.h"
 #include "GameConstants.h"
 
+
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 
+// QUESTION: is it okay if i implememnt some functions in the .h file and the cpp file
+
 class StudentWorld;
-class Actor: public GraphObject{
-public:
-    Actor(StudentWorld* world,  int col, int row, int imgId, Direction startDirection, float size, unsigned int depth);
-    virtual ~Actor(){}
-    virtual void doSomething() = 0;
-    virtual void Annoy() = 0;
-    StudentWorld* getWorld() const{
-        return m_world;
-        
-    }
-public:
+
+class Actor: public GraphObject
+{
+private:
+    bool m_life;
     StudentWorld* m_world;
-};
-
-
-class Earth: public Actor{
 public:
-
-//    Earth(StudentWorld* world, int startX, int startY, int imageID = TID_EARTH, Direction startDirection = right, float size = .25, unsigned int depth = 3)
-//            : Actor(world, imageID, startX, startY, startDirection, size, depth) {setVisible(true);}
-     Earth(StudentWorld* world, int col, int row, int imgID = TID_EARTH, Direction startDirection = right, float size = .25, unsigned int depth = 3):Actor(world, imgID, col, row, startDirection, size, depth){setVisible(true);}
-    virtual ~Earth(){}
-    virtual void doSomething(); //TODO: implement this function
-    virtual void Annoy();
+    Actor(int imageID, int startX, int startY, StudentWorld* world, Direction dir = right, double size = 1.0, unsigned int depth = 0): GraphObject(imageID,startX,startY,dir,size,depth),m_life(true),m_world(world){setVisible(true);}
+    virtual ~Actor() {}
+    void virtual doSomething() = 0;
+    bool isAlive()const { return m_life; }
+    void die() { m_life = false; }
+    StudentWorld* getWorld() { return m_world; }
 };
+
+class Earth: public Actor
+{
+public:
+    Earth(int startX, int startY, StudentWorld* world): Actor(TID_EARTH,startX,startY,world,right,.25,3){}
+    virtual void doSomething(){}
+    virtual ~Earth() {}
+};
+
+
 
 class TunnelMan: public Actor{
 private:
-    bool isAlive;
-    int setHitPoints, setWater, setSonar, setNuggets;
+    int hitPoints, water, sonar, nugget;
 public:
 // todo: declare the tunnelman's setter functions
-    TunnelMan(StudentWorld* world, int imgID = TID_PLAYER,int col=30, int row = 60,unsigned int depth = 0, float size = 1,  Direction startDirection = right):Actor(world, imgID, col, row, startDirection, size, depth), isAlive(true),  setHitPoints(10), setWater(5), setSonar(1), setNuggets(0){setVisible(true);}
-
-    virtual void doSomething(); //TODO: implement this function
-    virtual void Annoy();
-    void canMove(int ch, int dest_x, int dest_y);
-    void dec_hit_pts(int dec) {
-        setHitPoints -= dec;
-        }
-
-
-        void die() {
-            isAlive = false;
-        }
-
-        void live() {
-            isAlive = true;
-        }
-
-        bool getIsAlive() const {
-            return isAlive;
-        }
+    TunnelMan(StudentWorld* world):Actor(TID_PLAYER,30,60,world),hitPoints(10),water(5),sonar(1),nugget(0){}
+    virtual void doSomething();
+//    virtual void Annoy();
+    void sethitPoints(int points){
+        hitPoints = points;
+    }
+    void decWater(){
+        if(water > 0)
+        water--;
+    }
+    void incWater(){
+        water+=5;
+    }
+    void incSonar(){
+        sonar++;
+    }
+    int getHitPoints() const{
+        return hitPoints;
+    }
+    int getWater() const{
+        return water;
+    }
+    int getSonar() const{
+        return sonar;
+    }
+    int getNugget() const{
+        return nugget;
+    }
     virtual ~TunnelMan(){}
-    };
+};
 
 
 
