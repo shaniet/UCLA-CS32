@@ -16,44 +16,118 @@ GameWorld* createStudentWorld(string assetDir)
 
 // Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
 
-StudentWorld:: StudentWorld(string assetDir)
-    : GameWorld(assetDir)
-{
-    // m_tunnelMan = nullptr; not alive yet
-}
+
 
 StudentWorld::~StudentWorld()
 {}
 
-//clear earth function
-//64x64 that way the player can go up to the 4 black spaces on the very noth
-
 int StudentWorld:: init(){
+    
+    numTicks = 0;
+       for (int i = 0; i<64; i++)
+       {
+           for (int j = 0; j<61; j++)
+           {
+               grid[i][j] = 10;
+           }
+       }
     m_tunnelMan = new TunnelMan(this);
- 
-    for(int i = 0; i < 64; i++){
-        for(int j = 0;j< 64; j++){
-            if(i >= 30 && i <= 33 && j >= 4 && j <= 59){
-                continue;
+        //Initializing Earth
+        for (int i = 0; i < 64; i++)
+        {
+            for (int j = 0; j < 60; j++)
+            {
+                //Shaft
+                if ((i >= 30 && i <= 33) && (j >= 4 && j <= 59))
+                {
+                    
+                }
+                else {
+                    m_earth[i][j] = new Earth(i, j,this);
+                    grid[i][j] = TID_EARTH;
+                }
             }
-//            else{
-////                m_earth.push_back(new Earth(i,j,this));
-//            }
         }
-    }
     return GWSTATUS_CONTINUE_GAME;
 }
 
-int StudentWorld:: move(){
-    m_tunnelMan->doSomething();
-    decLives();
-        return GWSTATUS_PLAYER_DIED;
 
-}
-void StudentWorld:: cleanUp(){
-    delete m_tunnelMan;
-    for (int i = 0; i < m_actors.size(); i++)
+int StudentWorld::move(){
+    numTicks++;
+       
+    m_tunnelMan->doSomething();
+       
+       if (!m_actors.empty())
+       {
+           vector<Actor*>::iterator i;
+           
+           
+           for (i = m_actors.begin(); i != m_actors.end(); i++)
+           {
+               if ((*i)->isAlive())
+               {
+                   (*i)->doSomething();
+                   //If tunnelman dies
+               }
+           }
+           
+           //Remove dead objects
+           for (i = m_actors.begin(); i != m_actors.end();)
+           {
+               if (!(*i)->isAlive())
+               {
+                   delete *i;
+                   i = m_actors.erase(i);
+               }
+               else i++;
+           }
+       }
+       
+    if (!m_tunnelMan->isAlive())
+       {
+           playSound(SOUND_PLAYER_GIVE_UP);
+           decLives();
+           return GWSTATUS_PLAYER_DIED;
+       }
+       return GWSTATUS_CONTINUE_GAME;
+   }
+
+
+void StudentWorld::cleanUp() {
+    vector<Actor*>::iterator i;
+    for (i = m_actors.begin(); i != m_actors.end();)
     {
-        delete m_actors[i];
+        delete *i;
+        i = m_actors.erase(i);
+    }
+    for (int k = 0; k<64; k++)
+    {
+        for (int l = 0; l<60; l++)
+        {
+            delete m_earth[k][l];
+        }
+    }
+    
+    delete m_tunnelMan;
+}
+void StudentWorld::setGridContent(int x, int y, int ID)
+{
+    grid[x][y] = ID;
+}
+void StudentWorld::removeEarth(int x, int y)
+{
+    
+    for (int i = x; i<x + 4; i++)
+    {
+        for (int j = y; j<y + 4; j++)
+        {
+            if (m_earth[i][j] != nullptr)
+            {
+                delete m_earth[i][j];
+                m_earth[i][j] = nullptr;
+                grid[i][j] = 10;
+                playSound(SOUND_DIG);
+            }
+        }
     }
 }
