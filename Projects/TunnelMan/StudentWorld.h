@@ -24,11 +24,11 @@ public:
     TunnelMan* gettunnelMan() const;
     virtual ~StudentWorld();
 private:
-    TunnelMan* m_tunnelMan;
-	std::vector<Actor*> m_actors;
-    Earth * m_earth[64][64];
-    int grid[64][64];
-    int numTicks;
+    TunnelMan* m_tunnelMan; // pointer to the player
+	std::vector<Actor*> m_actors; // vector of pointers to all the actors in the game
+    Earth * m_earth[64][64] = {nullptr}; // 2D array of pointers to the earth objects
+    int grid[64][64]; // 2D array of integers to store the contents of the grid
+    int numTicks; // number of ticks since the game started
 };
 
 #endif // STUDENTWORLD_H_
