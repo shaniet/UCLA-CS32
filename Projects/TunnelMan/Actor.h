@@ -4,6 +4,10 @@
 #include "GraphObject.h"
 #include "GameConstants.h"
 #include <algorithm>
+#include <queue>
+#include <utility>
+
+
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 
 // Base class for Game's objects
@@ -36,21 +40,21 @@ public:
 
     class TunnelMan: public Actor{
     private:
-        int hitPoints, water, sonar, nugget, score;
+        int hitPoints, water, sonar, nugget, score, barrels;;
         
 
     public:
         
-        TunnelMan(StudentWorld* world):Actor(TID_PLAYER,30,60,world, right, 1.0, 0),hitPoints(10),water(5),sonar(4),nugget(0), score(0){setVisible(true);}//TunnelMan constructor
+        TunnelMan(StudentWorld* world):Actor(TID_PLAYER,30,60,world, right, 1.0, 0),hitPoints(10),water(5),sonar(1),nugget(0), score(0){setVisible(true);}//TunnelMan constructor
         
         virtual void doSomething();//TunnelMan doSomething function
-        virtual void Annoy(int amt); //TODO: implememnt this function pg 29
+        virtual void Annoy(int amt);
         virtual void setOwnVisible(bool visible){}
         // public helper functions
         
         void changeHitPoints(int change){
             hitPoints += change;
-            if (hitPoints <= 0) 
+            if (hitPoints <= 0)
                 die();
         }
         void changeWater(int change){
@@ -65,6 +69,12 @@ public:
        
         void changeScore(int change){
             score += change;
+        }
+        void changeBarrels(int change){
+            barrels += change;
+        }
+        void setBarrels(int numbarrels){
+            barrels = numbarrels;
         }
         //public getter functions: get hit points, get water, get sonar, get nugget
 
@@ -82,6 +92,9 @@ public:
         }
         int getScore() const{
             return score;
+        }
+        int getBarrels() const{
+            return barrels;
         }
         virtual ~TunnelMan(){}    //TunnelMan destructor
     };
@@ -106,7 +119,7 @@ public:
         //Boulder constructor
         Boulder(int startX, int startY, StudentWorld* world): Actor(TID_BOULDER,startX,startY,world,down,1.0,1){setVisible(true); setState(0);}
         //Boulder doSomething function
-        virtual void doSomething(); //TODO: implement this function pg. 32
+        virtual void doSomething();
         virtual void Annoy(int amt){}; //Boulder annoy function (doesnt annoy)
         //Boulder destructor
         void setState(int state){
@@ -134,9 +147,9 @@ public:
     class Squirt: public Actor{
     private:
         int m_travel = 4;
-    public: 
+    public:
         Squirt(int startX, int startY, StudentWorld* world, Direction dir): Actor(TID_WATER_SPURT,startX,startY,world,dir,1.0,0){setVisible(true); }//Squirt constructor
-        virtual void doSomething(); //Squirt doSomething function //TODO: implement this function pg. 33
+        virtual void doSomething(); //Squirt doSomething function
         virtual void Annoy(int amt) {} //Squirt annoy function (doesnt annoy)
         int getTravel() {
             return m_travel;
@@ -144,10 +157,8 @@ public:
         void decTravel(){
             m_travel--;
         }
-        void incTravel(){
-            m_travel+=4;
-        }
         virtual void setOwnVisible(bool visible){}
+        virtual ~Squirt() {}
 
     };
 
@@ -182,8 +193,8 @@ public:
         
             
         public:
-            Barrel(int startX, int startY, StudentWorld* world): Goodies(TID_BARREL,startX,startY,world){setOwnVisible(false);}//change
-            virtual void doSomething(); //TODO: implement this function pg. 34
+            Barrel(int startX, int startY, StudentWorld* world): Goodies(TID_BARREL,startX,startY,world){setOwnVisible(false);}
+            virtual void doSomething();
             virtual void Annoy(int amt){} //Oil annoy function (doesnt annoy)
             virtual ~Barrel() {}
         };
@@ -197,8 +208,7 @@ public:
             // pickupT == true -> can be picked up by tunnelMan only, else: protesters
             // state = true -> permanent, else: temporary
             Gold(int startX, int startY, StudentWorld* world, bool visible, bool pickupT, bool state): Goodies(TID_GOLD,startX,startY,world), m_pickupT(pickupT), m_state(state){setOwnVisible(visible); if(!m_state){setTicks(100);}}//changed
-            virtual void doSomething(); //TODO: implement this function pg. 34
-            virtual void Annoy(int amt){} //TODO: figure out if this needs to be implemented
+            virtual void doSomething();
             virtual ~Gold() {}
             bool getPickupT(){
                 return m_pickupT;
@@ -212,48 +222,115 @@ public:
         
         public:
             Sonar(int startX, int startY, StudentWorld* world, int ticks): Goodies(TID_SONAR,startX,startY,world){setOwnVisible(true); setTicks(ticks);}
-            virtual void doSomething(); //TODO: implement this function pg. 34
-            virtual void Annoy(int amt){} //Sonar annoy function (doesnt annoy)
+            virtual void doSomething();
             virtual ~Sonar() {}
         };
 
         class Water: public Goodies{
         public:
             Water(int startX, int startY, StudentWorld* world, int ticks): Goodies(TID_WATER_POOL,startX,startY,world){setOwnVisible(true); setTicks(ticks);}
-            virtual void doSomething(); //TODO: implement this function pg. 34
-            virtual void Annoy(int amt){} //Water annoy function (doesnt annoy)
+            virtual void doSomething();
+//            virtual void Annoy(int amt){} //Water annoy function (doesnt annoy)
             virtual ~Water() {}
         };
 
     class Protester: public Actor{
-        public: 
-        Protester(int imageID, int startX, int startY, StudentWorld* world, int hitPoints): Actor(imageID,startX,startY,world,left,1.0,0){setVisible(true);} // TODO: finish this constructor with function initliazers
-        virtual void doSomething(){}; // Do something function for Protester //TODO: implement this function pg. 35
-        virtual void Annoy(int amt){};// Annoy function for Protester
     
-        ~Protester() {}
-        private: 
+
+        public:
+        Protester(int imageID, int startX, int startY, StudentWorld* world, int numSquaresToMove): Actor(imageID,startX,startY,world,left,1.0,0){setOriginalTicks(numSquaresToMove);}
+        virtual void doSomething(); // Do something function for Protester
+        virtual void Annoy(int amt);// Annoy function for Protester
+        bool checkProtestor(int x, int y, Direction dir, int state);
+        Direction getDir(int x, int y, int XorY);
+        Direction randDir();
+        void setState(int state){ // 0: rest state 1: active state state 2: dead
+            m_state = state;
+        }
+        int getState(){
+            return m_state;
+        }
+        void setHitPoints(int hp){
+            hitPoints = hp;
+        }
+        void changeHitPoints(int amt){
+            hitPoints += amt;
+        }
+        int getHitPoints(){
+            return hitPoints;
+        }
+        void setNumSquaresToMoveInCurrentDirection(int num){
+            numSquaresToMoveInCurrentDirection = num;
+        }
+        int getNumSquaresToMoveInCurrentDirection(){
+            return numSquaresToMoveInCurrentDirection;
+        }
+        void decNumSquaresToMoveInCurrentDirection(){
+            numSquaresToMoveInCurrentDirection--;
+        }
+        void setTicksProt(int ticks){
+            ticksToWaitBetweenMoves = ticks;
+        }
+        int getTicksProt(){
+            return ticksToWaitBetweenMoves;
+        }
+        void decTicksProt(){
+            ticksToWaitBetweenMoves--;
+        }
+        void setCountPerp(int count){
+            countPerp = count;
+        }
+        void decCountPerp(){
+            countPerp--;
+        }
+        int getCountPerp(){
+            return countPerp;
+        }
+        void setOriginalTicks(int num){
+            originalTicks = num;
+        }
+        int getOriginalTicks(){
+            return originalTicks;
+        }
+//        int getTrack(int x, int y){
+//            return track[x][y];
+//        }
+        void BFS(int track[][64],int x, int y);
+        bool isValid(int track[][64],int x, int y);
+        std::stack<Direction> Moveit(int track[][64], int x, int y);
+//        void Exit(int track[][64], int x, int y,int ex, int ey);
+        virtual void setOwnVisible(bool visible){}
+
+        virtual ~Protester(){}
+        private:
             int ticksToWaitBetweenMoves;
+    
+            int hitPoints;
+            int countPerp;
+            int numSquaresToMoveInCurrentDirection;
+            int m_state;
+       
+            int originalTicks;
+
     };
 
         class RegularProtester: public Protester{
         public:
-            RegularProtester(int startX, int startY, StudentWorld* world): Protester(TID_PROTESTER,startX,startY,world,5){}
-            virtual void doSomething(){}; //TODO: implement this function
-            virtual void Annoy(int amt){};//TODO: implement this function
+            RegularProtester(int startX, int startY, StudentWorld* world, int numSquaresToMove, int ticks): Protester(TID_PROTESTER,startX,startY,world, ticks){setNumSquaresToMoveInCurrentDirection(numSquaresToMove); setState(0); setHitPoints(5); setTicksProt(ticks); setVisible(true);}
+           
             virtual ~RegularProtester() {}
+        private:
+          
         };
 
         class HardcoreProtester: public Protester{
         public:
-            HardcoreProtester(int startX, int startY, StudentWorld* world): Protester(TID_HARD_CORE_PROTESTER,startX,startY,world,20){}
-            virtual void doSomething(){}; //TODO: implement this function
-            virtual void Annoy(int amt){}; //TODO: implement this function 
+            HardcoreProtester(int startX, int startY, StudentWorld* world, int numSquaresToMove, int ticks): Protester(TID_HARD_CORE_PROTESTER,startX,startY,world, ticks){setNumSquaresToMoveInCurrentDirection(numSquaresToMove); setState(0); setHitPoints(20); setTicksProt(ticks); setVisible(true);}
             virtual ~HardcoreProtester() {}
+
         };
 
 
-//TODO: remove annoy() functions for everythign except tunnelman and protestors
 
 
 #endif // ACTOR_H_
